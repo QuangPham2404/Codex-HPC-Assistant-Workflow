@@ -50,7 +50,7 @@ the conflict before taking the affected action.
 
 ### Starting a new project
 
-1. Clone or copy this package into the new project repository. Use command `rm -rf Codex-HPC-Assistant-Workflow/.git` to ensure git conflict with the root repo.
+1. Clone or copy this package into the new project repository. Use command `npx degit QuangPham2404/Codex-HPC-Assistant-Workflow my-project/workflow` to download as a directory rather than a git-tracked repo.
 2. Copy or adapt `AGENTS_EXAMPLE.md` into the project root as `AGENTS.md`.
 3. Read every numbered workflow file in this directory in order.
 4. Edit the clearly marked placeholders in
