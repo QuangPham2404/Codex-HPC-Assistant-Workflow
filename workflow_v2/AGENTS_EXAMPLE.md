@@ -13,6 +13,9 @@ Before taking action, Codex must:
 3. Identify the active `tasks/TASK-XXX.md` explicitly; do not infer it from
    file modification time.
 4. Read the approved task and the latest progress report under `progress/`.
+   Verify front matter has `status: APPROVED` and `current_owner: codex`, and
+   `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
+   and the exact `approved_scope` before execution.
 5. Check the project Git state according to `workflow/01-Git-Sync-Policy.md`.
 
 For the `SETUP` command only, read `APPLICATION.md` if present; no active task
@@ -47,24 +50,35 @@ owns:
 - Strategic Specification creation;
 - strategic analysis under `planning/analysis/`.
 
+The Strategic Analyst drafts new tasks from `workflow/TASK-TEMPLATE.md` for
+Human Leader review. With authorized direct GitHub access, it may write the
+task after explicit human approval and write analysis after `ANALYSE_RESULTS`.
+A conversation draft is only a proposal, not executable repository state.
+
 The Strategic Analyst proposes actions but does not authorize its own proposal.
-Human approval is required before Codex executes the approved scope.
+The Human Leader reviews, modifies, and explicitly approves the task. With
+authorized GitHub access, the Strategic Analyst materializes the approved
+`tasks/TASK-XXX.md` directly. Otherwise the Human Leader writes it manually
+or authorizes a repository agent to copy the exact approved content. Human
+approval and synchronized repository materialization are required before
+Codex executes the approved scope.
 
 ### Codex Orchestrator
 
 Codex is the operational orchestrator, not the strategic analyst. Codex:
 
-- reads an approved task;
+- reads an approved task from the synchronized repository;
 - decomposes execution work;
 - manages subagents and workers;
 - identifies parallel and dependent work;
 - performs bounded follow-up orchestration;
 - validates evidence operationally;
 - verifies scope compliance;
-- appends the `CODEX EXECUTION REPORT`.
+- completes the `CODEX EXECUTION REPORT`.
 
 Codex must not:
 
+- reconstruct or guess a Strategic Specification from conversation history;
 - rewrite the Strategic Specification;
 - change the strategic objective;
 - infer campaign-level root cause;

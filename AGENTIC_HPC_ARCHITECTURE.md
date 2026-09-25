@@ -35,7 +35,18 @@ The workflow is divided into three major layers.
               ChatGPT Web / Sol
               Strategic Analyst
                        │
-                       │ approved Strategic Specification
+                       │ draft Strategic Specification
+                       ▼
+                Human Leader reviews
+                and explicitly approves
+                       │
+                       │ Strategic Analyst writes directly
+                       │ or approved fallback materializes
+                       │ commit + push
+                       ▼
+                 tasks/TASK-XXX.md
+
+                       │ approved task
                        ▼
 
                  EXECUTION LAYER
@@ -126,6 +137,8 @@ The Human Leader owns:
 - hypothesis selection;
 - approval of strategic tasks;
 - approval of experiments and high-risk actions;
+- authorization of the Strategy → Execution handoff and any repository write
+  needed to materialize approved task content;
 - acceptable compute/resource expenditure;
 - final interpretation of recommendations;
 - promotion of new baselines;
@@ -164,6 +177,13 @@ The Strategic Analyst owns:
 - writing the Strategic Specification for an approved task;
 - strategic analysis under `planning/analysis/`;
 - updates to campaign-level plans when authorized.
+
+The Strategic Analyst drafts the complete `TASK-XXX.md` content for Human
+Leader review. After explicit human approval, it may materialize the approved
+task directly in GitHub when authorized access exists. Direct write access does
+not let it approve its own proposal. Without that access, the Human Leader or
+an authorized mechanical repository agent materializes the exact approved
+content. A draft in conversation remains only a proposal.
 
 The Strategic Analyst must distinguish clearly between:
 
@@ -226,7 +246,7 @@ Codex owns:
 - resolving operational inconsistencies;
 - checking execution scope;
 - collecting and indexing evidence;
-- appending the Codex Execution Report to the task file.
+- completing the Codex Execution Report in the task file.
 
 Codex should use subagents when useful, not ritualistically.
 
@@ -352,7 +372,7 @@ The main persistent communication object is:
 tasks/TASK-XXX.md
 ```
 
-It contains:
+The repository copy contains:
 
 1. the Strategic Specification;
 2. the Codex Execution Report.
@@ -374,15 +394,29 @@ profiling/
 
 Task files reference raw evidence rather than duplicating it.
 
+Only an approved task materialized in the repository is an executable
+Strategy → Execution handoff. Draft task content in a conversation is not
+executable repository state.
+
 ---
 
 ## 3.2 Strategy → Execution
 
-The Strategic Analyst writes the Strategic Specification.
+The Strategic Analyst drafts the Strategic Specification from the canonical
+`workflow/TASK-TEMPLATE.md`. The Human Leader reviews, modifies, and
+explicitly approves it. With authorized direct GitHub access, the Strategic
+Analyst materializes the approved `TASK-XXX.md` itself. Otherwise the Human
+Leader writes the task manually or instructs a repository agent to copy the
+exact approved content mechanically. The task is committed and pushed
+according to the project Git policy and human authorization.
 
-The Human Leader reviews and approves it.
+Codex pulls the repository and reads the approved task. Codex executes
+repository state, not unpublished conversation content, and only within the
+approved scope.
 
-Codex reads the approved task and executes only within the approved scope.
+A fallback repository agent must not change the Strategic Specification,
+reinterpret the request, expand scope, add strategic decisions, or begin
+execution unless separately instructed and authorized.
 
 Codex must not infer the active task merely from file modification time.
 
@@ -446,7 +480,10 @@ Workers should not generate a strategic report.
 
 ## 3.5 Codex → Strategic Analyst
 
-After execution, Codex appends the Codex Execution Report to the same task file.
+After execution and operational validation, Codex completes the Execution
+Report in the same task file, sets front matter to `status: EXECUTED` and
+`current_owner: strategic-analyst`, and makes the latest repository revision
+available according to Git policy.
 
 The report records:
 
@@ -460,21 +497,18 @@ The report records:
 - failures or exceptions;
 - scope compliance.
 
-Codex does not perform strategic interpretation.
-
-The Strategic Analyst later reads:
-
-```text
-Strategic Specification
-+
-Codex Execution Report
-+
-raw referenced evidence
-+
-relevant prior analysis/context
-```
-
-and performs the actual analysis.
+Codex does not perform strategic interpretation. The Human Leader explicitly
+authorizes `ANALYSE_RESULTS` before strategic analysis begins. The Strategic
+Analyst reads the task, raw evidence, and relevant prior context directly
+whenever practical, then persists analysis under
+`planning/analysis/<analysis-id>.md` and updates
+`planning/PLANS.md` when applicable. With authorized GitHub access it writes
+these files directly; otherwise it supplies the exact analysis and task
+metadata update for the Human Leader or an authorized mechanical agent to
+materialize. After analysis is complete and persisted, the Strategic Analyst
+is responsible for moving each task whose analysis is complete to
+`status: ANALYZED` and `current_owner: user`. The Human Leader then makes the
+strategic decision.
 
 ---
 
@@ -527,21 +561,34 @@ FAILED
 
 ## 4.2 Current owner
 
-Each task should identify who is expected to act next.
+Front matter identifies who acts next:
 
-Recommended values:
+| Status | `current_owner` |
+| --- | --- |
+| `DRAFT` | `strategic-analyst` |
+| `APPROVED` | `codex` |
+| `EXECUTING` | `codex` |
+| `EXECUTED` | `strategic-analyst` |
+| `ANALYZED` | `user` |
+| `CLOSED` | `user` |
 
-```text
-current_owner: user
-current_owner: strategic-analyst
-current_owner: codex
-```
+The Strategic Analyst drafts the task. Human approval moves `DRAFT` to
+`APPROVED`. Codex moves `APPROVED` to `EXECUTING` when work starts, then to
+`EXECUTED` only after operational validation and the Execution Report are
+complete. Authorized, persisted strategic analysis moves `EXECUTED` to
+`ANALYZED`; Codex never makes that transition. The Human Leader may close the
+task or approve a new child task. `BLOCKED` and `FAILED` identify the actor who
+must act next.
 
 ---
 
 # 5. Task File Structure
 
-Use the following structure.
+Use the following structure. The reusable copy is
+`workflow_v2/TASK-TEMPLATE.md`; project task files are copied from it. Lifecycle
+`status` and `current_owner` live in front matter. Human approval and its exact
+scope live in `### 1.11 Authorization`, not in a second front-matter field.
+Authorization stays `APPROVED` as the front-matter lifecycle status advances.
 
 ```markdown
 ---
@@ -649,9 +696,9 @@ Optional guidance about priorities or decomposition.
 ### 1.11 Authorization
 status: <DRAFT | APPROVED>
 
-approved_scope: <brief description>
+approved_scope: <brief exact description>
 
-approved_by: user
+approved_by: <user | null>
 
 ---
 
@@ -888,13 +935,19 @@ A typical boundary remains:
 ```text
 Codex execution completes
         ↓
-raw evidence logged
+raw evidence logged and results updated where applicable
         ↓
-Codex Execution Report appended
+Codex Execution Report completed
+        ↓
+task → EXECUTED; current_owner → strategic-analyst
+        ↓
+latest repository revision available
         ↓
 human authorizes analysis
         ↓
-Strategic Analyst analyzes evidence
+Strategic Analyst reads task and raw evidence, then persists analysis
+        ↓
+task → ANALYZED; current_owner → user
         ↓
 Human Leader decides next action
 ```
@@ -1023,12 +1076,17 @@ The Git repository acts as the durable transport between strategic and execution
 
 Before Codex executes a task:
 
-1. synchronize the local repository according to the project Git policy;
-2. verify the intended `TASK-XXX.md` revision is present;
-3. verify the task status is approved;
-4. verify the current task scope matches the user's instruction.
+1. ensure the Human Leader-approved task content has been materialized as
+   `tasks/TASK-XXX.md`;
+2. commit and push the approved task according to the project Git policy;
+3. synchronize the local repository according to the project Git policy;
+4. verify the intended `TASK-XXX.md` revision is present;
+5. verify front matter is `status: APPROVED` with `current_owner: codex`;
+6. verify `### 1.11 Authorization` records `status: APPROVED`, the exact
+   approved scope, and `approved_by: user`;
+7. verify that scope matches the user's instruction.
 
-After Codex appends the Execution Report:
+After Codex completes the Execution Report and marks the task `EXECUTED`:
 
 1. validate the file;
 2. commit/push when authorized and required by project policy;
@@ -1132,10 +1190,11 @@ They identify a question:
 
 ## Step 2 — Strategic Specification
 
-The Strategic Analyst creates:
+The Strategic Analyst drafts the complete task-file content from
+`workflow_v2/TASK-TEMPLATE.md` for Human Leader review:
 
 ```text
-tasks/TASK-012.md
+TASK-012.md content
 ```
 
 with:
@@ -1156,7 +1215,11 @@ DRAFT
 
 ## Step 3 — Human approval
 
-The Human Leader reviews the specification.
+The Human Leader reviews, modifies if needed, and explicitly approves the
+specification. With authorized direct GitHub access, the Strategic Analyst
+materializes the approved task. Otherwise the Human Leader writes it or
+authorizes a repository agent to copy the exact approved content. Git writes
+follow project policy and human authorization.
 
 After approval:
 
@@ -1165,9 +1228,13 @@ status: APPROVED
 current_owner: codex
 ```
 
+The Authorization section separately records `status: APPROVED`,
+`approved_scope`, and `approved_by: user`.
+
 ## Step 4 — Codex orchestration
 
-Codex reads the task and decides the work can be split into:
+Codex verifies the approved front matter and Authorization section, moves the
+task to `EXECUTING`, and decides the work can be split into:
 
 - CPU/NUMA mapping;
 - launcher/process placement;
@@ -1206,7 +1273,7 @@ If necessary, Codex issues bounded follow-up worker prompts.
 
 ## Step 7 — Codex Execution Report
 
-Codex appends the Execution Report to:
+Codex completes the Execution Report section in:
 
 ```text
 tasks/TASK-012.md
@@ -1215,6 +1282,10 @@ tasks/TASK-012.md
 The report references raw artifacts.
 
 It does not contain strategic interpretation.
+
+After operational validation and the report are complete, Codex moves the
+task to `EXECUTED` with `current_owner: strategic-analyst` and makes the
+latest revision available under the Git policy.
 
 ## Step 8 — Analysis authorization
 
@@ -1230,11 +1301,17 @@ The Strategic Analyst reads:
 - relevant prior analysis;
 - any required raw logs.
 
-It creates or updates:
+With authorized direct GitHub access, it creates or updates:
 
 ```text
 planning/analysis/<analysis-id>.md
 ```
+
+It also updates `planning/PLANS.md` when applicable. Without direct write
+access, the Human Leader or an authorized mechanical agent materializes the
+exact analysis and task metadata update. Once analysis is complete and
+persisted, the Strategic Analyst is responsible for the task's
+`status: ANALYZED` and `current_owner: user` transition.
 
 ## Step 10 — Human decision
 
@@ -1252,6 +1329,8 @@ The Human Leader decides whether to:
 - create a new task;
 - approve a controlled experiment;
 - stop the investigation.
+
+Closing the task sets `status: CLOSED` with `current_owner: user`.
 
 ---
 
@@ -1319,7 +1398,8 @@ Implement:
 
 - `tasks/`;
 - canonical task-file format;
-- Strategic Analyst → task handoff;
+- Strategic Analyst draft → Human-approved repository task handoff, with
+  direct Strategic Analyst writing when authorized;
 - Codex orchestration;
 - transient OpenCode/GLM workers;
 - Codex Execution Report;
@@ -1350,7 +1430,12 @@ USER — Human Leader
         ↕
 ChatGPT Web / Sol — Strategic Analyst
         │
-        │ Strategic Specification
+        │ draft Strategic Specification content
+        ▼
+Human Leader reviews / explicitly approves
+        │
+        │ Strategic Analyst writes directly or approved fallback materializes;
+        │ commit + push under Git policy
         ▼
 tasks/TASK-XXX.md
         │
@@ -1365,10 +1450,11 @@ raw evidence in canonical repository locations
         ▼
 Codex — operational validation
         │
-        │ appends Codex Execution Report
+        │ completes Codex Execution Report
         ▼
 tasks/TASK-XXX.md
         │
+        │ EXECUTED; current_owner: strategic-analyst
         ▼
 Human authorizes analysis
         │
@@ -1378,6 +1464,7 @@ ChatGPT Web / Sol — Strategic Analyst
         ▼
 planning/analysis/<analysis-id>.md
         │
+        │ ANALYZED; current_owner: user
         ▼
 USER — final strategic decision
 ```

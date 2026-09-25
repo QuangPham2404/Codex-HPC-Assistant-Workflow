@@ -45,8 +45,12 @@ no `tasks/TASK-XXX.md` or progress report is required. Normal task-based
 startup applies after setup.
 
 1. Inspect the repository structure, documentation, Git changes, existing
-   workflow files, and project-specific rules. Classify it as fresh or existing
-   and map existing directories to Workflow v2 roles.
+   workflow files, and project-specific rules. In an existing project, include
+   root `AGENTS.md` and `README.md`, directory READMEs that direct future
+   work, `tasks/` guidance or templates, active `workflow/`, and obvious
+   duplicate workflow copies such as `workflow_old/` or temporary migration
+   backups. Classify the repository as fresh or existing and map its directories
+   to Workflow v2 roles.
 2. Prepare a concise proposal using `PRESERVE`, `ADAPT`, `ADD`, `REPLACE`, and
    `CONFLICT` where applicable. Explain each proposed change, uncertainties,
    and the important areas left untouched. For an existing project, reuse
@@ -55,7 +59,10 @@ startup applies after setup.
    other consequential ambiguity. Use the canonical skeleton as a reference,
    not a reason to rearrange historical state. For a fresh project, propose
    only required elements and leave unknown project values as explicit
-   placeholders. State that no files have been modified.
+   placeholders. Classify historical documentation as `PRESERVE`, active stale
+   guidance as `ADAPT`, and competing task formats or unnecessary migration
+   residue as `CONFLICT` or candidates for removal. State that no files have
+   been modified.
 3. Wait for the user's review. If the user changes the proposal, revise it.
    When the user agrees, present one concise final summary of exactly what
    will change, explicitly identify important areas left untouched, and ask
@@ -67,9 +74,16 @@ startup applies after setup.
    first task unless separately requested. Do not execute scientific work,
    submit jobs, access the cluster, or perform strategic analysis. A read-only
    cluster configuration check requires specific user approval.
-5. Inspect the complete diff, run `git diff --check`, verify preserved areas
-   remain unchanged, and report the result and `git status`. Do not commit or
-   push automatically; follow the existing Git policy and authorization.
+5. Inspect the complete diff, run `git diff --check`, and verify preserved areas
+   remain unchanged. For an existing project, make one final consistency check
+   of active guidance and control files: future-work ownership, directory
+   descriptions, task format, and the identity of the active workflow must
+   agree with Workflow v2. Report unresolved conflicts and do not declare
+   setup complete while active guidance contradicts it. Historical progress,
+   analysis, experiment READMEs, results, and PBS evidence remain preserved.
+   Do not delete residue unless removal was in the final confirmed change set.
+   Report the result and `git status`. Do not commit or push automatically;
+   follow the existing Git policy and authorization.
 
 ## Task files and ownership
 
@@ -79,11 +93,15 @@ Each bounded strategic action uses one project-root task file:
 tasks/TASK-XXX.md
 ```
 
+Create it from `workflow/TASK-TEMPLATE.md`, the sole reusable task template.
+Retain its front matter and both numbered sections.
+
 The task file contains only:
 
-1. `STRATEGIC SPECIFICATION`, created by the Strategic Analyst and approved by
-   the Human Leader;
-2. `CODEX EXECUTION REPORT`, appended by Codex after execution.
+1. `STRATEGIC SPECIFICATION`, drafted by the Strategic Analyst, reviewed and
+   approved by the Human Leader, then materialized by the Strategic Analyst
+   when authorized or through the approved fallback;
+2. `CODEX EXECUTION REPORT`, completed by Codex after execution.
 
 The task file is the execution contract and operational history for that
 bounded action. Raw evidence remains in canonical locations such as
@@ -98,9 +116,26 @@ Use the task lifecycle where applicable:
 DRAFT → APPROVED → EXECUTING → EXECUTED → ANALYZED → CLOSED
 ```
 
-Use `BLOCKED` or `FAILED` when the execution state requires it. A task should
-also identify its current owner, normally `strategic-analyst`, `codex`, or
-`user`.
+The front-matter ownership mapping is:
+
+| Status | `current_owner` |
+| --- | --- |
+| `DRAFT` | `strategic-analyst` |
+| `APPROVED` | `codex` |
+| `EXECUTING` | `codex` |
+| `EXECUTED` | `strategic-analyst` |
+| `ANALYZED` | `user` |
+| `CLOSED` | `user` |
+
+The Strategic Analyst drafts the task. Human approval moves `DRAFT` to
+`APPROVED`. Codex moves it to `EXECUTING` when work starts, then to `EXECUTED`
+only after operational validation and the Execution Report are complete. At
+that handoff ownership moves to the Strategic Analyst. After authorized
+analysis is complete and persisted, the Strategic Analyst moves `EXECUTED` to
+`ANALYZED` and returns ownership to the user. The Human Leader may then close
+the task or approve a new child task. Codex must not mark a task `ANALYZED`.
+`BLOCKED` and `FAILED` remain valid exceptional states; set `current_owner` to
+the actor who must act next.
 
 ## Step 1: Strategic Specification and human approval
 
@@ -110,8 +145,8 @@ analysis, hypotheses, causal reasoning, experiment design, and creation of the
 Strategic Specification. The Strategic Analyst proposes; it does not authorize
 its own proposal.
 
-The Strategic Analyst creates a task file with the canonical front matter and
-the `STRATEGIC SPECIFICATION` section. It should identify:
+The Strategic Analyst drafts a new task from `workflow/TASK-TEMPLATE.md`. The
+`STRATEGIC SPECIFICATION` should identify:
 
 - objective and required context;
 - strategic question or hypotheses, where relevant;
@@ -124,17 +159,31 @@ the `STRATEGIC SPECIFICATION` section. It should identify:
 - optional decomposition guidance;
 - authorization and approved scope.
 
-The Human Leader reviews the task and approves, modifies, or rejects it. A
-normal approved task records:
+The Human Leader reviews, modifies, approves, or rejects the draft. After
+explicit approval, the Strategic Analyst should materialize the approved task
+directly in GitHub when authorized access exists. Otherwise the Human Leader
+may write it manually or instruct Codex or another repository agent to copy
+the exact approved content mechanically. A conversation draft is not
+executable. The approved task is committed and pushed according to project Git
+policy. Front matter records:
 
 ```yaml
 status: APPROVED
 current_owner: codex
-approved_by: user
 ```
 
-Codex must not execute a task that is only `DRAFT`, has ambiguous scope, or
-cannot be unambiguously identified.
+`### 1.11 Authorization` separately records `status: APPROVED`, the exact
+`approved_scope`, and `approved_by: user`. Direct GitHub access does not let
+the Strategic Analyst approve its own proposal. A mechanical repository agent
+must not reinterpret the content, expand scope, add strategic decisions, or
+begin execution without separate authorization. The Authorization section
+stays `APPROVED` as front-matter lifecycle status advances.
+
+Codex must not reconstruct or guess a Strategic Specification from conversation
+history. Before execution it verifies the identified task exists under
+`tasks/` at the intended synchronized revision, front matter is `APPROVED`
+with `current_owner: codex`, and the Authorization section records human
+approval and the approved scope.
 
 ## Step 2: Codex orchestration and prepare build/run directories
 
@@ -188,8 +237,9 @@ Check both clones according to `01-Git-Sync-Policy.md`. Before Codex executes:
 1. synchronize the local repository according to normal policy;
 2. verify the explicitly identified `tasks/TASK-XXX.md` revision is present
    locally and remotely as applicable;
-3. verify the task status is `APPROVED` and its scope matches the user's
-   instruction;
+3. verify front matter has `status: APPROVED` and `current_owner: codex`, and
+   `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
+   and the exact approved scope matching the user's instruction;
 4. ensure Codex is not acting on a stale Strategic Specification;
 5. verify reviewed scripts, application revision, and required metadata are
    the versions intended for execution.
@@ -198,6 +248,10 @@ Do not infer the active task from whichever file is newest. If fast-forward
 synchronization fails, clones diverge, the task revision is stale, or the
 approval state is unclear, stop and inspect or report the conflict rather than
 merging, overwriting, or changing the task.
+
+After these checks, Codex sets front matter to `status: EXECUTING` with
+`current_owner: codex` immediately before the first approved execution action,
+whether local, delegated, or on the cluster.
 
 ## Step 4: Execute approved work on the cluster
 
@@ -228,7 +282,7 @@ If execution requires an action outside the approved task, Codex must stop.
 It must not silently submit a job, change resources or launcher settings,
 modify the scientific question, or start a new optimization direction.
 
-## Step 5: Log results and append the Codex Execution Report
+## Step 5: Log results and complete the Codex Execution Report
 
 At the end of build/run work, record results only. Do not perform optimization
 analysis or update strategic planning conclusions in this step.
@@ -250,32 +304,8 @@ support failed/incomplete attempts when metadata permits. Keep raw `.o` and
 `.e` provenance. Generate or update `RESULTS.md` from the CSV. Do not add
 strategic interpretation to `planning/` during results logging.
 
-After approved execution and operational validation, Codex appends to the same
-active task file:
-
-```markdown
-## 2. CODEX EXECUTION REPORT
-
-### 2.1 Execution Status
-
-### 2.2 Orchestration Summary
-
-### 2.3 Work Executed
-
-### 2.4 Operational Validation
-
-### 2.5 Evidence and Artifacts
-
-### 2.6 Files Changed
-
-### 2.7 Missing / Unavailable Evidence
-
-### 2.8 Execution Errors / Exceptions
-
-### 2.9 Scope Compliance
-
-### 2.10 Handoff to Strategic Analyst
-```
+After execution work or a blocking failure, Codex completes section 2 of the
+same active task file using `workflow/TASK-TEMPLATE.md`.
 
 The report records facts, completeness, provenance, operational validation,
 and scope compliance. It must reference raw evidence rather than duplicate
@@ -296,10 +326,13 @@ Codex should normally record:
 - whether the approved scope was respected;
 - the information the Strategic Analyst needs before reading raw evidence.
 
-After appending the report, validate the task file and references. Commit and
-push when required and authorized by normal Git policy, and ensure the
-Strategic Analyst can read the latest repository revision. The report is
-operational context, not the analytical source of truth.
+After completing the report and operational validation, Codex sets front matter
+to `status: EXECUTED` and `current_owner: strategic-analyst`. It validates the
+task file and references, commits and pushes when required and authorized by
+normal Git policy, and ensures the Strategic Analyst can read the latest
+repository revision. The report is operational context, not the analytical
+source of truth. Incomplete or failed work retains its accurate exceptional
+status and next owner.
 
 ## Step 6: Analyze only with `ANALYSE_RESULTS`
 
@@ -317,8 +350,15 @@ restrictions: <additional limits>
 
 `ANALYSE_RESULTS` authorizes the Strategic Analyst to read the selected
 evidence, create or update `planning/analysis/<analysis-id>.md`, update
-`planning/PLANS.md` when applicable, and present analysis. It does not
-authorize jobs, source changes, configuration changes, or the next experiment.
+`planning/PLANS.md` when applicable, update the task front matter after
+completed analysis, and present analysis. With authorized direct GitHub access,
+the Strategic Analyst writes these files directly. Otherwise the Human Leader
+may materialize the Strategic Analyst's exact analysis and task metadata update
+manually or authorize a repository agent to copy them mechanically. All writes follow
+project Git policy; direct access does not grant self-approval of a new task.
+`ANALYSE_RESULTS` does not authorize jobs, source changes, configuration
+changes, or the next experiment.
+
 If only `ANALYSE_RESULTS` is supplied, identify the available evidence and ask
 which direction or group is in scope before writing a new analysis.
 
@@ -341,13 +381,13 @@ Every new or substantially updated analysis file uses:
 
 ```markdown
 ---
-task_id: ...
-title: ...
-analysis_id: ...
-status: ...
-parent_task: ...
-created: ...
-last_updated: ...
+task_id: TASK-XXX
+title: <relevant title>
+analysis_id: <stable analysis id>
+status: COMPLETE
+parent_task: <TASK-XXX | none>
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
 ---
 
 # Analysis — <Title>
@@ -365,6 +405,13 @@ The internal structure of `## 2. Analysis` is flexible. It may contain
 quantitative comparisons, trends, hypothesis evaluation, causal reasoning,
 alternative explanations, failed or inconclusive evidence, uncertainty,
 technical implications, recommended next action, and provenance links.
+One analysis may synthesize multiple tasks when scientifically appropriate.
+
+Only after authorized analysis is completed and persisted is the Strategic
+Analyst responsible for moving each task whose analysis is complete to
+`status: ANALYZED` and `current_owner: user`, directly or through the approved
+mechanical fallback. Make the latest revision available to the Human Leader.
+Strategic conclusions stay in `planning/analysis/`, not the task file.
 
 Use technically precise but human-readable engineering prose. Prefer direct
 wording over unnecessarily dense academic or agent-style language. Use jargon
@@ -384,7 +431,8 @@ any proposed next action. The Human Leader decides whether to close the issue,
 create a new task, approve a controlled experiment, reopen a direction, or
 stop the investigation. No agent autonomously changes the campaign direction,
 promotes a baseline, or turns an analysis recommendation into execution
-permission.
+permission. A human decision to close the task sets `status: CLOSED` and
+`current_owner: user`; a new strategic action normally gets a child task.
 
 Before ending, write a dated
 `progress/YYYY-MM-DD-progress[_sN].md` file. Include the active task and

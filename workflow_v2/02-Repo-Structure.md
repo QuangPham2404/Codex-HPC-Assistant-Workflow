@@ -115,11 +115,19 @@ analysis workflow.
 
 One bounded strategic action corresponds to one task file under `tasks/`.
 The task file is the persistent handoff between the Strategic Analyst and
-Codex and contains only:
+Codex. Copy `workflow/TASK-TEMPLATE.md` for each new task; do not invent a
+shorter task format or create task files for historical work. It contains only:
 
 1. `STRATEGIC SPECIFICATION`, written by the Strategic Analyst and approved by
    the Human Leader;
-2. `CODEX EXECUTION REPORT`, appended by Codex after execution.
+2. `CODEX EXECUTION REPORT`, completed by Codex after execution.
+
+The Human Leader reviews and explicitly approves the Strategic Analyst's
+draft before materialization. With authorized direct GitHub access, the
+Strategic Analyst writes the approved task to the repository. Otherwise the
+Human Leader writes it or authorizes a repository agent to copy the exact
+approved content mechanically. Only the committed, synchronized task file is
+executable by Codex; conversation drafts are proposals.
 
 Raw benchmark, probe, profiling, PBS, and result evidence stays in its
 existing canonical location. Task files reference that evidence rather than
@@ -131,13 +139,13 @@ simplified contract:
 
 ```markdown
 ---
-task_id: ...
-title: ...
-analysis_id: ...
-status: ...
-parent_task: ...
-created: ...
-last_updated: ...
+task_id: TASK-XXX
+title: <relevant title>
+analysis_id: <stable analysis id>
+status: COMPLETE
+parent_task: <TASK-XXX | none>
+created: YYYY-MM-DD
+last_updated: YYYY-MM-DD
 ---
 
 # Analysis — <Title>
@@ -152,7 +160,8 @@ last_updated: ...
 ```
 
 The internal structure of `## 2. Analysis` is flexible and should fit the
-question and evidence.
+question and evidence. One analysis may synthesize multiple tasks when
+scientifically appropriate.
 
 ## Naming contract
 

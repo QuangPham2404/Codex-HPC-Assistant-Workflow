@@ -33,14 +33,23 @@ changes:
 6. pull with `git pull --ff-only` in the cluster clone;
 7. verify the intended commit, task revision, and scripts are present
    remotely;
-8. verify the explicitly identified task is approved and its scope matches the
-   user's instruction;
+8. verify the explicitly identified task has `status: APPROVED` and
+   `current_owner: codex` in front matter, and its Authorization section
+   records `status: APPROVED`, `approved_by: user`, and an approved scope
+   matching the user's instruction;
 9. confirm that neither tree has unexpected changes, except documented
    generated output or explicitly preserved runtime artifacts.
 
 Codex must not act on a stale Strategic Specification. If the intended task
 revision is absent, the task is not approved, or the local and remote clones
 disagree about the task, stop and synchronize or report the conflict.
+
+For the Strategy → Execution handoff, the Human Leader approves the task and
+authorizes its repository materialization. With authorized direct GitHub
+access, the Strategic Analyst writes the approved task. Otherwise the Human
+Leader writes it or authorizes a repository agent to copy the exact approved
+content mechanically. The approved task must then be committed and pushed
+under project Git policy before Codex pulls and executes it.
 
 Never run stale local-only build, run, extraction, or planning scripts on the
 cluster. They must reach the cluster through the reviewed Git synchronization.
@@ -77,7 +86,7 @@ Aspire2A-to-local result retrieval may use the project's documented output
 retrieval workflow, but retrieved files must land in the matching local
 project directories and retain their provenance.
 
-After Codex appends the Execution Report to the active task:
+After Codex completes the Execution Report in the active task:
 
 1. validate the task file and referenced evidence;
 2. commit and push when required and authorized by normal project policy;

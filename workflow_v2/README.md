@@ -19,7 +19,12 @@ The operating model is:
 
 ```text
 Human Leader ↔ Strategic Analyst
-                    │ approved Strategic Specification
+                    │ draft task content
+                    ▼
+              Human review / approval
+                    │ Strategic Analyst writes directly when authorized;
+                    │ otherwise approved fallback materializes
+                    │ commit, push under Git policy
                     ▼
               tasks/TASK-XXX.md
                     ▼
@@ -78,7 +83,9 @@ the conflict before taking the affected action.
 
 ### Setting up a fresh or existing project
 
-Make this package available to Codex, then ask it from the project repository:
+Make this package available to Codex. If an existing root `AGENTS.md` predates
+v2, follow the bootstrap below first. Then ask Codex from the project
+repository:
 
 ```text
 SETUP
@@ -90,6 +97,26 @@ Codex inspects the repository and proposes the minimum setup, including adding
 preserves historical work. Review the proposal, then give final confirmation
 after Codex summarizes the exact change set. The command alone is read-only.
 The authoritative procedure is in `07-Workflow.md` under `SETUP`.
+
+For a fresh project without meaningful root instructions, copy or adapt
+`AGENTS_EXAMPLE.md` as root `AGENTS.md` before normal task execution. New task
+files come from `TASK-TEMPLATE.md`, not a project-invented format.
+
+For an existing project whose root `AGENTS.md` predates v2, first bootstrap
+the active instructions:
+
+1. Install or make this package available as the project's `workflow/`.
+2. With human approval, surgically adapt the existing root `AGENTS.md` against
+   `workflow/AGENTS_EXAMPLE.md`. Preserve project-specific cluster, SSH,
+   scheduler, Git, safety, application, and stricter operational rules; replace
+   only obsolete architecture, role, and startup logic. Do not overwrite the
+   mature file with the generic example.
+3. Restart or reload Codex so the updated `AGENTS.md` is read from session
+   start, then invoke `SETUP`.
+
+`SETUP` then performs the normal repository-wide proposal and confirmation
+procedure, including a final check for conflicting active guidance and
+migration residue.
 
 Do not begin cluster work until all placeholders in
 `00-General-SSH-Rules.md` have been replaced and the SSH, remote-root,
@@ -150,7 +177,8 @@ instructions and the applicable task.
 ## Package files
 
 - `AGENTS_EXAMPLE.md`: example project-root instructions that activate this
-  pack without modifying an existing project `AGENTS.md`.
+  pack; adapt an existing project `AGENTS.md` surgically.
+- `TASK-TEMPLATE.md`: the sole canonical template for new task files.
 - `00-General-SSH-Rules.md`: universal safe SSH/execution policy and cluster
   adaptation placeholders.
 - `01-Git-Sync-Policy.md`: local/cluster clone synchronization and Git rules.
@@ -169,4 +197,9 @@ Task files are persistent project-root handoffs between the Strategic Analyst
 and Codex. They contain the Strategic Specification and the Codex Execution
 Report. Raw evidence remains in the canonical project locations, and strategic
 analysis remains under `planning/analysis/`; neither is duplicated in the task
-file.
+file. After human approval, the Strategic Analyst may write the task directly
+in GitHub when authorized; otherwise the Human Leader or a mechanical
+repository agent materializes the exact approved content. After
+`ANALYSE_RESULTS`, the Strategic Analyst may directly write the analysis and
+applicable `planning/PLANS.md` update under project Git policy. Codex executes
+only synchronized, approved repository state.
