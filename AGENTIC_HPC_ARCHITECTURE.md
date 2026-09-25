@@ -248,11 +248,13 @@ Codex owns:
 - collecting and indexing evidence;
 - completing the Codex Execution Report in the task file.
 
-Codex should use subagents when useful, not ritualistically.
+Codex must delegate substantive task execution to one or more execution workers.
+Codex decides the number of workers, decomposition, dependencies, parallelism,
+and follow-up work.
 
-A trivial task may be performed directly by Codex.
-
-A complex task may be split among several workers.
+Codex may directly perform only orchestration, repository scaffolding,
+operational validation, bookkeeping, and other trivial operations that do not
+constitute substantive task execution.
 
 ### Codex is not the Strategic Analyst
 
@@ -994,7 +996,8 @@ Codex may decide:
 - which work should run in parallel;
 - which work depends on prior results;
 - whether a worker needs a follow-up prompt;
-- whether Codex should perform a trivial operation directly;
+- which trivial orchestration, validation, scaffolding, or bookkeeping
+  operations Codex should perform directly;
 - whether additional operational validation is needed.
 
 Codex should prefer parallelism for independent read-only work.

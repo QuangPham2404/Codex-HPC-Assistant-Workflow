@@ -76,6 +76,11 @@ Codex is the operational orchestrator, not the strategic analyst. Codex:
 - verifies scope compliance;
 - completes the `CODEX EXECUTION REPORT`.
 
+For substantive task execution, Codex must delegate work to one or more
+OpenCode workers through the project-approved OpenCode runtime. Codex may
+directly perform orchestration, repository scaffolding, validation,
+bookkeeping, and other trivial non-execution operations.
+
 Codex must not:
 
 - reconstruct or guess a Strategic Specification from conversation history;
