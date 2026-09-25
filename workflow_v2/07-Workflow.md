@@ -36,6 +36,41 @@ coordinate bounded workers, and validate facts. It must not perform campaign-
 level interpretation, choose a new optimization direction, rewrite the
 Strategic Specification, or promote a new baseline.
 
+## `SETUP`: repository initialization or adaptation
+
+`SETUP` is the single onboarding command for a fresh or existing repository.
+It is a narrow exception to active-task startup: read the complete workflow
+pack, check Git state, and inspect available project guidance and configuration;
+no `tasks/TASK-XXX.md` or progress report is required. Normal task-based
+startup applies after setup.
+
+1. Inspect the repository structure, documentation, Git changes, existing
+   workflow files, and project-specific rules. Classify it as fresh or existing
+   and map existing directories to Workflow v2 roles.
+2. Prepare a concise proposal using `PRESERVE`, `ADAPT`, `ADD`, `REPLACE`, and
+   `CONFLICT` where applicable. Explain each proposed change, uncertainties,
+   and the important areas left untouched. For an existing project, reuse
+   compatible structures, preserve historical evidence and stricter valid
+   project rules, and surface conflicts with the Workflow v2 architecture or
+   other consequential ambiguity. Use the canonical skeleton as a reference,
+   not a reason to rearrange historical state. For a fresh project, propose
+   only required elements and leave unknown project values as explicit
+   placeholders. State that no files have been modified.
+3. Wait for the user's review. If the user changes the proposal, revise it.
+   When the user agrees, present one concise final summary of exactly what
+   will change, explicitly identify important areas left untouched, and ask
+   for final confirmation. Agreement with the proposal alone does not
+   authorize edits; a clear final confirmation does, without a magic phrase.
+4. Apply only the confirmed local setup changes. First ensure they will not
+   overwrite unrelated user changes. Preserve project-specific rules and all
+   historical artifacts. Do not create a task for historical work or start a
+   first task unless separately requested. Do not execute scientific work,
+   submit jobs, access the cluster, or perform strategic analysis. A read-only
+   cluster configuration check requires specific user approval.
+5. Inspect the complete diff, run `git diff --check`, verify preserved areas
+   remain unchanged, and report the result and `git status`. Do not commit or
+   push automatically; follow the existing Git policy and authorization.
+
 ## Task files and ownership
 
 Each bounded strategic action uses one project-root task file:

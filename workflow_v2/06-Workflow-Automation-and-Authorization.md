@@ -8,6 +8,19 @@ An approved `tasks/TASK-XXX.md` defines the maximum execution scope for Codex
 for that task. The Strategic Analyst proposes the task, the Human Leader
 approves it, and Codex executes only the approved scope.
 
+## `SETUP` authority
+
+`SETUP` authorizes repository and Git inspection and a setup proposal only.
+It does not authorize creating, editing, moving, renaming, or deleting files.
+After the user agrees with the proposal, Codex presents the exact final change
+set, states important areas that will remain untouched, and asks for final
+confirmation. Only clear final confirmation authorizes those local setup
+changes; revisions to the plan require another review and confirmation.
+
+`SETUP` does not authorize scientific or task execution, cluster jobs,
+strategic analysis, or commit/push. Existing project Git policy still governs
+commit and push.
+
 ## Actions normally within routine workflow scope
 
 Within the approved task scope, and when permitted by the project `AGENTS.md`,

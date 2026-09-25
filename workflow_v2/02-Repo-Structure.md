@@ -1,9 +1,9 @@
 # Repository Structure and Skeleton
 
 Codex must use this document when creating, validating, or explaining the
-workflow repository skeleton. Create the directories and documentation locally
-first. Do not create a different structure merely because another layout seems
-convenient.
+workflow repository structure. The canonical skeleton is the reference for a
+fresh project. For an existing project, reuse compatible structures and make
+only the changes required for Workflow v2 to govern new work.
 
 ## Canonical skeleton
 
@@ -165,8 +165,21 @@ question and evidence.
 
 ## Skeleton initialization behavior
 
-When asked to create the skeleton, Codex should create missing directories,
-README files, templates, and placeholders locally, while preserving existing
-files and user changes. It must not clone source, submit jobs, install
-packages, modify shared software, or invent application-specific correctness
-criteria without the relevant project information and authorization.
+`SETUP` follows the inspection, proposal, and confirmation procedure in
+`07-Workflow.md` before creating or changing any files.
+
+For a fresh or nearly empty project, propose only the canonical directories,
+README files, templates, and placeholders the project requires. Do not invent
+cluster facts, application correctness criteria, compiler or launcher settings,
+resource requests, or project permissions; leave unknown values explicit.
+
+For an existing project, map its directories to the roles above and reuse
+compatible `builds/`, `experiments/`, `planning/`, `results/`, `progress/`, and
+`scripts/` structures. Add only genuinely missing elements, such as `tasks/`
+when needed, and minimally adapt existing guidance. Replace a reusable
+workflow-control file only when it is an older version and replacement is the
+cleanest migration; preserve its project-specific configuration. Historical
+builds, experiments, PBS evidence, results, analyses, plans, scripts, progress
+records, names, and attempt histories remain authoritative. Do not move,
+renumber, regenerate, or convert them merely to match the skeleton; do not
+create task files for past work. Workflow v2 governs new work going forward.

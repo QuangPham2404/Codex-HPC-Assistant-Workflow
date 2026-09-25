@@ -15,6 +15,13 @@ Before taking action, Codex must:
 4. Read the approved task and the latest progress report under `progress/`.
 5. Check the project Git state according to `workflow/01-Git-Sync-Policy.md`.
 
+For the `SETUP` command only, read `APPLICATION.md` if present; no active task
+or progress report is required. Read the workflow pack, check Git state, and
+inspect existing project guidance and configuration before following the
+`SETUP` procedure in `workflow/07-Workflow.md`. No file changes are authorized
+until the user confirms the final setup change set. After setup, the normal
+approved-task startup requirement applies again.
+
 ## Roles and authority
 
 ### Human Leader
