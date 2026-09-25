@@ -187,18 +187,51 @@ approval and the approved scope.
 
 ## Step 2: Codex orchestration and prepare build/run directories
 
-Before execution, Codex reads the approved task and decomposes only the work
-inside its scope. It decides whether to work directly or use bounded
-execution workers, identifies dependencies, and runs independent read-only
-work in parallel when safe. Dependent work remains sequential. Shared-file
-writes are serialized; workers must not edit the same file concurrently.
+Before execution, Codex reads the approved task and decomposes only the work inside its scope.
 
-Codex communicates with normally OpenCode / GLM workers through transient
-prompts or sessions. Worker instructions should state the task, inputs,
-allowed actions, required return facts and evidence paths, and prohibited
-interpretation or scope expansion. Workers probe, inspect, execute, test,
-modify explicitly approved files, extract measurements, and preserve raw
-evidence. They do not recommend the next strategic action.
+Codex is the operational orchestrator. It may directly perform the orchestration and repository-scaffolding work needed to coordinate execution, including:
+
+- inspecting the approved task, repository state, existing artifacts, and relevant paths;
+- deciding worker count, responsibilities, dependencies, ordering, and parallelism;
+- determining the build/run/experiment directory and naming structure;
+- creating the required local directory skeletons and output directories;
+- establishing the files, evidence paths, and interfaces that workers will use;
+- validating worker outputs, evidence, provenance, and scope compliance;
+- performing simple bookkeeping or mechanical calculations needed for orchestration.
+
+For **substantive task execution**, Codex must delegate work to one or more OpenCode workers through the project-approved OpenCode runtime. Codex decides how workers are used, but does not choose whether substantive execution uses workers.
+
+Substantive execution includes, where applicable:
+
+- writing or modifying build, run, PBS, probe, extraction, or task-specific execution scripts;
+- inspecting systems or runtime behavior to obtain task evidence;
+- executing approved local or remote commands;
+- submitting and monitoring scheduler jobs;
+- retrieving generated outputs;
+- extracting measurements from raw evidence;
+- performing task-specific tests or probes;
+- making other substantive implementation changes explicitly permitted by the approved task.
+
+Codex may perform a trivial operation directly when it is purely orchestration, validation, or bookkeeping. It must not use this exception to collapse a substantive task back into a single-agent workflow.
+
+Independent worker tasks should run in parallel when safe. Dependent work remains sequential. Shared-file writes must be serialized; workers must not edit the same file concurrently.
+
+Codex communicates with OpenCode workers through transient prompts or sessions. Worker instructions should state:
+
+- the parent task;
+- the bounded worker objective;
+- relevant inputs and paths;
+- allowed actions;
+- prohibited actions;
+- required factual return values;
+- required evidence paths;
+- applicable stop conditions.
+
+Workers may probe, inspect, execute, test, write or modify explicitly approved task artifacts, extract measurements, and preserve raw evidence. They may use local reasoning necessary to complete their bounded assignment, but they must not perform campaign-level interpretation, recommend the next strategic action, promote a baseline, or expand task scope.
+
+After each worker returns, Codex validates the relevant claims against repository state and raw evidence before relying on them. Codex may issue bounded follow-up worker assignments when additional operational evidence or correction is needed within the approved scope.
+
+OpenCode worker invocation is part of the project execution workflow and is distinct from platform-native agent spawning or delegation features. A restriction on platform-native agent spawning does not by itself authorize Codex to replace the OpenCode execution layer with direct substantive execution.
 
 ### 2.1 Prepare builds
 
