@@ -412,7 +412,8 @@ Leader writes the task manually or instructs a repository agent to copy the
 exact approved content mechanically. The task is committed and pushed
 according to the project Git policy and human authorization.
 
-Codex pulls the repository and reads the approved task. Codex executes
+Codex synchronizes to the exact approved revision through a safe primary clone
+or isolated clean execution worktree and reads the approved task. Codex executes
 repository state, not unpublished conversation content, and only within the
 approved scope.
 
@@ -560,6 +561,19 @@ A failed operational task may use:
 ```text
 FAILED
 ```
+
+`EXECUTING / codex` is durable and resumable across sessions, worker restarts,
+scheduler waiting, transient infrastructure recovery, synchronization, and
+Track 1 fixes. Section `1.11 Authorization` retains Human approval and unchanged
+scope; lifecycle progress is not a replacement for that record. Resume the same
+task directly without returning to `APPROVED` or renewed approval.
+
+`BLOCKED` means another actor must act: Human authentication/authorization,
+external administrator action, destructive conflict resolution, user changes
+that overlap required state and cannot be isolated, a new resource/launcher/
+transport or dependency decision, or strategic/Track 2 judgment. Safe deterministic
+recovery stays `EXECUTING / codex`; a dirty primary clone or optional persistence
+failure with working direct SSH alone is not a handoff.
 
 ## 4.2 Current owner
 
@@ -1063,13 +1077,15 @@ For the initial implementation:
 - shared-file writes should be serialized by Codex;
 - multiple workers should not edit the same file concurrently.
 
-Later versions may introduce:
+Workflow v2 currently uses isolated clean execution worktrees as the standard
+safe fallback when a primary clone cannot safely synchronize for execution.
+This isolates repository/execution state where appropriate; it does not require
+a worktree per worker or permit concurrent shared-file edits. `SETUP` configures
+the root and propagates `.codex-worktrees/` into the downstream root ignore policy.
+Runtime worktree contents are not normal repository content; evidence must be
+retrieved/persisted before verified disposable cleanup.
 
-- separate Git branches;
-- Git worktrees;
-- isolated worker sandboxes.
-
-Those are not required for the first working version.
+Later versions may introduce separate worker branches or worker sandboxes.
 
 ---
 
@@ -1084,10 +1100,44 @@ Before Codex executes a task:
 2. commit and push the approved task according to the project Git policy;
 3. synchronize the local repository according to the project Git policy;
 4. verify the intended `TASK-XXX.md` revision is present;
-5. verify front matter is `status: APPROVED` with `current_owner: codex`;
+5. verify front matter is `status: APPROVED` (initial) or `status: EXECUTING`
+   (resume), with `current_owner: codex`;
 6. verify `### 1.11 Authorization` records `status: APPROVED`, the exact
    approved scope, and `approved_by: user`;
 7. verify that scope matches the user's instruction.
+
+After validating initial approval, Codex records `EXECUTING / codex` before
+execution preparation; resumed work retains it. Direct non-interactive read-only
+SSH is the required connectivity baseline; ControlMaster / ControlPath and
+persistent setup/checks are optional. Their failure does not block working
+direct SSH. Authentication requiring Human interaction remains a real blocker;
+password automation, secret handling, and authentication configuration changes
+remain prohibited.
+
+Inspect and record the cluster primary clone revision and working-tree state.
+A sufficiently clean, safely fast-forwardable primary may synchronize with
+configured fetch and `git pull --ff-only`; verify the exact intended approved
+commit. Preserve a dirty or otherwise unsuitable primary tree unchanged,
+fetch configured refs non-destructively, and create a clean detached execution
+worktree at that exact commit. Verify task, scripts, inputs, and HEAD before use.
+Unrelated primary divergence does not require merging if isolation is safe;
+conflicting required authoritative histories or task content require resolution.
+Never reset, clean, stash/pop, automatically merge, destructively checkout,
+delete, or overwrite user work to enable execution.
+
+Reuse only a suitable intended-task worktree at the exact revision without
+unresolved or unique evidence; otherwise create a unique new one. Remove only
+verified disposable workflow-created worktrees with no uncommitted tracked
+changes, unique untracked evidence, or outputs (including ignored files) needing
+retrieval/persistence. Never force removal or clean up the primary clone.
+Record worktree paths, revisions, jobs, evidence, and retrieval state for resume.
+Root project `AGENTS.md` defines exact aliases, paths, remote/ref, SSH/transfer,
+and routine status/fetch/rev-parse/worktree/fast-forward command forms during
+`SETUP`. Once authorized, these non-destructive mechanics remain ordinary task
+authority across sessions. They do not authorize force pushes, user-state
+deletion, or automatic conflict resolution. Missing required revisions/files,
+failed safe isolation, required authentication, or recovery needing destructive
+resolution or new judgment/authority are real blockers when another actor must act.
 
 After Codex completes the Execution Report and marks the task `EXECUTED`:
 
@@ -1147,7 +1197,11 @@ Codex should:
 - record execution errors;
 - avoid automatic strategic interpretation;
 - stop on conditions requiring human or strategic judgment;
-- append the blocked/failure state to the active task.
+- perform documented deterministic Track 1 recovery inside existing scope,
+  including direct SSH fallback, fetch, worktree isolation/recreation, and
+  workspace preparation; preserve evidence and remain `EXECUTING / codex`;
+- record failures/recovery in the active task; use `BLOCKED` with the actual
+  next owner only when another actor genuinely must act.
 
 Execution failure is not automatically a scientific conclusion.
 
@@ -1408,7 +1462,8 @@ Implement:
 - Codex Execution Report;
 - strategic analysis in existing `planning/analysis/`;
 - human approval gates;
-- Git synchronization between layers.
+- preservation-first Git synchronization and execution worktrees between layers;
+- durable `EXECUTING` resume under unchanged Section 1.11 approval.
 
 Do not initially implement:
 

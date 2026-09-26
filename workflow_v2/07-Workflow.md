@@ -63,6 +63,27 @@ startup applies after setup.
    guidance as `ADAPT`, and competing task formats or unnecessary migration
    residue as `CONFLICT` or candidates for removal. State that no files have
    been modified.
+   The proposal must determine the required non-interactive SSH connectivity
+   and command forms, optional persistence (or `none`), cluster primary clone,
+   configured Git remote/ref, and approved isolated execution-worktree root.
+   Specify clean-primary fast-forward behavior and dirty-primary preservation
+   with an exact-revision worktree fallback. Propose the allowed routine Git
+   inspection/fetch/revision/worktree/fast-forward commands and file-transfer
+   forms in root `AGENTS.md`, including reuse, evidence retrieval, and disposal
+   restrictions. Determine whether the cluster can perform configured fetch
+   non-interactively; do not assume credentials or remote network capability.
+   If inspection cannot establish it locally, propose a specifically authorized
+   read-only remote check; keep unknown capability explicit until verified.
+   Include root `.gitignore` handling: for fresh projects create/adapt it; for
+   existing projects append `.codex-worktrees/` surgically only if missing,
+   preserving every existing rule. Verify the root rule effectively ignores
+   this runtime directory, including any conflicting negations. Do not track
+   worktree contents or create runtime worktrees during local setup.
+   Detect and reject active instructions that unnecessarily require ControlMaster,
+   unconditionally stop on dirty primary trees, or allow only `APPROVED` startup
+   and prevent `EXECUTING` resume. Surgically adapt mature guidance rather than
+   replacing valid project-specific rules. Unknown required values must be
+   completed and approved before affected remote execution begins.
 3. Wait for the user's review. If the user changes the proposal, revise it.
    When the user agrees, present one concise final summary of exactly what
    will change, explicitly identify important areas left untouched, and ask
@@ -137,6 +158,14 @@ the task or approve a new child task. Codex must not mark a task `ANALYZED`.
 `BLOCKED` and `FAILED` remain valid exceptional states; set `current_owner` to
 the actor who must act next.
 
+`EXECUTING / codex` persists across sessions, worker restarts, scheduler waiting,
+transient recovery, synchronization, and deterministic Track 1 fixes. Section
+1.11 remains the durable Human approval record with unchanged approved scope;
+front matter is lifecycle progress. Resume the same task directly without a
+return to `APPROVED` or renewed approval. Safe recovery stays `EXECUTING`.
+Use `BLOCKED` only when another actor genuinely must act, setting that owner
+and recording the exact missing decision, authorization, or external action.
+
 ## Step 1: Strategic Specification and human approval
 
 The Human Leader and Strategic Analyst determine the bounded question or
@@ -182,10 +211,18 @@ stays `APPROVED` as front-matter lifecycle status advances.
 Codex must not reconstruct or guess a Strategic Specification from conversation
 history. Before execution it verifies the identified task exists under
 `tasks/` at the intended synchronized revision, front matter is `APPROVED`
-with `current_owner: codex`, and the Authorization section records human
-approval and the approved scope.
+for initial execution or `EXECUTING` for resume, with `current_owner: codex`.
+The Authorization section must record human approval and the approved scope.
 
 ## Step 2: Codex orchestration and prepare build/run directories
+
+For initial execution, after verifying approval, set front matter to
+`EXECUTING / codex` before beginning approved execution preparation, including
+connectivity and synchronization. Preserve that state for safe recovery and
+resume. Record lifecycle updates through project Git policy without altering
+the approved Strategic Specification or silently selecting a new execution
+commit. On resume review durable progress, existing jobs, attempts, worktree
+paths, and evidence before assigning work; avoid duplicate submissions.
 
 Before execution, Codex reads the approved task and decomposes only the work inside its scope.
 
@@ -249,7 +286,8 @@ MPI compiler, optimization notes, metadata, and build error-patching records.
 PBS stdout/stderr go directly to `outputs/`; keep every attempt.
 
 Before remote use, review and validate locally, commit and push when required,
-pull remotely, and ensure the remote output directory exists.
+select/verify the remote execution tree under `01-Git-Sync-Policy.md`, and
+ensure its designated output directory exists.
 
 ### 2.2 Prepare experiments
 
@@ -263,28 +301,32 @@ Preparation must remain within the approved task scope. If a needed build,
 experiment, source edit, resource change, launcher change, or package action
 is not approved, stop and report the exact additional authority required.
 
-## Step 3: Synchronize the two repositories and verify the active task
+## Step 3: Synchronize and verify the execution tree
 
-Check both clones according to `01-Git-Sync-Policy.md`. Before Codex executes:
+Follow `01-Git-Sync-Policy.md` using commands configured and authorized during
+`SETUP`. Routine safe synchronization needs no new approval each session.
 
-1. synchronize the local repository according to normal policy;
-2. verify the explicitly identified `tasks/TASK-XXX.md` revision is present
-   locally and remotely as applicable;
-3. verify front matter has `status: APPROVED` and `current_owner: codex`, and
-   `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
-   and the exact approved scope matching the user's instruction;
-4. ensure Codex is not acting on a stale Strategic Specification;
-5. verify reviewed scripts, application revision, and required metadata are
-   the versions intended for execution.
+1. Inspect/synchronize local state under project policy and identify the exact
+   intended approved execution commit and active task revision.
+2. Run the required direct non-interactive read-only SSH check. Optional
+   persistence failure does not block work when direct SSH works.
+3. Record cluster primary HEAD and working-tree state. If sufficiently clean
+   and safely fast-forwardable, synchronize normally with fast-forward only.
+   Otherwise preserve its files, fetch the configured remote non-destructively,
+   and create or safely reuse an isolated clean worktree at the exact commit.
+4. Verify execution HEAD, task revision, and front matter: `APPROVED / codex`
+   for fresh entry or `EXECUTING / codex` for resume (already-started work
+   remains `EXECUTING`). Section 1.11 must record `APPROVED`, `approved_by: user`,
+   and unchanged approved scope matching the instruction.
+5. Verify reviewed scripts, application revision, inputs, and metadata are the
+   intended versions; record the execution path/revision and evidence locations.
 
-Do not infer the active task from whichever file is newest. If fast-forward
-synchronization fails, clones diverge, the task revision is stale, or the
-approval state is unclear, stop and inspect or report the conflict rather than
-merging, overwriting, or changing the task.
-
-After these checks, Codex sets front matter to `status: EXECUTING` with
-`current_owner: codex` immediately before the first approved execution action,
-whether local, delegated, or on the cluster.
+Never infer the active task from modification time, execute stale task content,
+merge automatically, or overwrite user material. A failed fast-forward requires
+inspection and safe isolation where possible. Escalate only unresolved required
+history/content conflicts, unavailable revisions/files, failed safe isolation,
+authentication requiring Human action, or recovery requiring destructive action
+or new judgment/authority. Deterministic recovery remains `EXECUTING / codex`.
 
 ## Step 4: Execute approved work on the cluster
 
@@ -478,9 +520,13 @@ exact next action.
 Preserve evidence and failed attempts. Record the current task, IDs, PBS job,
 stdout/stderr, error or blocker, and manual-inspection case. State whether the
 workflow awaits user action, external change, authorization, or a fix. Record
-the exact resume action. Do not retry, patch, submit, change direction, or
-widen scope without authorization. Validate, commit, and push the progress
-record when normal Git policy applies, and synchronize before remote work
+the exact resume action. Preserve `EXECUTING / codex` for incomplete work
+that can continue under unchanged Section 1.11 approval, including scheduler
+waiting and Track 1 recovery. Resume directly in the next session; safe retries,
+patches, and submissions already within scope need no renewed approval.
+Use `BLOCKED` with the genuine next actor only when their action is required.
+Do not change direction or widen scope without new authorization. Validate,
+commit, and push the progress record when normal Git policy applies, and synchronize before remote work
 resumes.
 
 ### Case 2: analysis is complete

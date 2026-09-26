@@ -13,10 +13,26 @@ only the synchronized repository state and scope; it must not reconstruct or
 guess a Strategic Specification from conversation history. Direct write access
 never grants the Strategic Analyst authority to approve its own proposal.
 
-Before execution, verify task front matter has `status: APPROVED` and
+Before execution, verify task front matter has `status: APPROVED` (initial)
+or `status: EXECUTING` (resume) and
 `current_owner: codex`, and `### 1.11 Authorization` records
 `status: APPROVED`, `approved_by: user`, and the exact `approved_scope`.
 Git writes remain subject to project policy and explicit human authorization.
+
+## Durable execution authority and genuine handoffs
+
+Section `1.11 Authorization` is the durable Human authorization record.
+Front matter records lifecycle progress. `EXECUTING / codex` means work has
+started, not weaker approval. The same task resumes directly across sessions,
+worker restarts, scheduler waiting, transient recovery, synchronization, and
+Track 1 fixes while approval and scope remain unchanged. Never require moving
+it back to `APPROVED` or renewed approval merely because a session ended.
+
+Safe deterministic recovery stays `EXECUTING / codex`. Set `BLOCKED` and the
+actual next owner only when another actor must act: Human authentication or
+new approval, administrator action, destructive conflict resolution, ambiguous
+user changes that cannot be isolated, strategic judgment, or required dependency,
+resource, launcher, or transport decisions outside existing authority.
 
 ## `SETUP` authority
 
@@ -49,6 +65,17 @@ Codex may autonomously:
 The project instructions must define the actual command forms and approved
 prefixes. Do not infer that permission from this reusable pack alone.
 
+Once reviewed command forms are authorized during `SETUP`, routine recovery
+within the same task does not require approval every session. Root `AGENTS.md`
+must configure `git status`, `git fetch`, `git rev-parse`, `git worktree list`,
+`git worktree add`, verified disposable `git worktree remove`, and
+`git pull --ff-only` for a clean primary clone, plus read-only remote inspection,
+direct non-interactive SSH, and file transfer. Apply the preservation/reuse/
+cleanup checks in `01-Git-Sync-Policy.md`. This never authorizes `git reset --hard`,
+`git clean`, force push, automatic merge/conflict resolution, destructive
+checkout, or deletion of user state. Verified disposable worktree removal is
+the narrow cleanup exception; other deletion still requires explicit authority.
+
 ## Actions outside autonomous Codex authority
 
 Codex may not autonomously:
@@ -71,7 +98,8 @@ Stop and request direction before:
 - compiler, MPI, module, package, or build-strategy changes;
 - changed resource requests or launcher strategy;
 - package installation or shared-software changes;
-- destructive actions, deletion, overwrite, or job cancellation;
+- destructive actions, deletion (except already-authorized verified disposable
+  workflow-worktree removal), overwrite, or job cancellation;
 - unrelated external coordination;
 - pushing when the project policy requires explicit approval;
 - starting a new optimization direction after analysis;

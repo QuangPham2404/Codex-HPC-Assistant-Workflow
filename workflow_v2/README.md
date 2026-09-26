@@ -41,6 +41,14 @@ Human Leader ↔ Strategic Analyst
               Strategic Analyst → Human decision
 ```
 
+Workflow v2 uses direct non-interactive SSH as baseline connectivity, with
+optional persistent SSH for performance. It preserves dirty primary clones
+through clean isolated execution worktrees and resumes `EXECUTING / codex`
+tasks across sessions under unchanged Section 1.11 Human approval. `SETUP`
+configures these behaviors, routine synchronization permissions, and the
+project's `.codex-worktrees/` ignore rule. Safe deterministic recovery stays
+with Codex; meaningful authorization and strategic decisions remain human-led.
+
 ## Mandatory reading and precedence
 
 When this package is active in a project, Codex must read every numbered file
@@ -127,8 +135,9 @@ scheduler, launcher, authentication, and resource rules have been reviewed.
 `00-General-SSH-Rules.md` contains universal safety rules plus a clearly
 marked cluster-configuration section. The universal rules must be preserved.
 The configuration section must be completed for the new cluster, including
-the SSH alias or connection method, connection check, required non-interactive
-SSH/SCP/rsync forms, remote project root, scheduler, launcher, module policy,
+the required direct connectivity check, optional persistent check/setup or
+`none`, non-interactive SSH/SCP/rsync forms, remote project root, primary clone,
+Git remote/ref, execution-worktree root, scheduler, launcher, module policy,
 login-node policy, and compute-node policy.
 
 The project `AGENTS.md` may repeat the active cluster name, remote root, or
@@ -165,7 +174,8 @@ unrelated permissions into a new project.
 
 After setup, for every execution session the Human Leader or approved
 automation must identify the active task. Codex should read the complete pack,
-verify that task's status is permitted for execution, inspect the latest
+verify `APPROVED / codex` for initial execution or `EXECUTING / codex` for
+resume and unchanged Section 1.11 approval, inspect the latest
 progress report, and follow `07-Workflow.md`. Codex may orchestrate and
 validate work within that approved task, but it is not the Strategic Analyst
 and may not choose a new optimization direction. The pack is not permission to

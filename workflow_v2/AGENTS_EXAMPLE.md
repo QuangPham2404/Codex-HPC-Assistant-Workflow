@@ -13,7 +13,8 @@ Before taking action, Codex must:
 3. Identify the active `tasks/TASK-XXX.md` explicitly; do not infer it from
    file modification time.
 4. Read the approved task and the latest progress report under `progress/`.
-   Verify front matter has `status: APPROVED` and `current_owner: codex`, and
+   Verify front matter has `status: APPROVED` (initial execution) or
+   `status: EXECUTING` (resume), with `current_owner: codex`, and
    `### 1.11 Authorization` records `status: APPROVED`, `approved_by: user`,
    and the exact `approved_scope` before execution.
 5. Check the project Git state according to `workflow/01-Git-Sync-Policy.md`.
@@ -24,6 +25,12 @@ inspect existing project guidance and configuration before following the
 `SETUP` procedure in `workflow/07-Workflow.md`. No file changes are authorized
 until the user confirms the final setup change set. After setup, the normal
 approved-task startup requirement applies again.
+
+Section 1.11 is durable Human approval. Resume the same `EXECUTING / codex`
+task across sessions without moving it back to `APPROVED`; scope must remain
+unchanged. Review progress, jobs, evidence, and execution paths before retrying.
+Safe Track 1 recovery remains `EXECUTING / codex`; `BLOCKED` is a genuine
+handoff to another actor, not a routine operational repair.
 
 ## Roles and authority
 
@@ -150,12 +157,29 @@ project applies here.
 
 Examples of information to define, only when approved:
 
+- required direct non-interactive SSH connectivity and file-transfer forms;
+- optional persistent SSH check/setup, or `none`;
+- cluster primary clone, configured Git remote/ref, and execution-worktree root;
+- permitted `git status`, `fetch`, `rev-parse`, `worktree list/add`, verified
+  disposable `worktree remove`, and clean-primary `pull --ff-only` forms;
+- preservation-first dirty-primary isolation and root `.codex-worktrees/` ignore;
 - permitted Git commands and branch scope;
 - permitted syntax checks and directory creation;
 - permitted scheduler submission and bounded monitoring commands;
 - permitted output retrieval commands;
 - commands that always require user approval;
 - commands that are prohibited.
+
+Once these forms are authorized during `SETUP`, use routine non-destructive
+synchronization and recovery within task scope without fresh approval each
+session. Direct SSH suffices; optional ControlMaster failure is not a blocker.
+Preserve dirty primary files and execute at the exact approved commit in a clean
+worktree under `workflow/01-Git-Sync-Policy.md`. Never clean/reset/stash/overwrite
+user state to synchronize. A failed fast-forward alone calls for inspection and
+safe isolation where possible, not automatic handoff.
+
+Verified disposable workflow-worktree removal is permitted only under the
+configured cleanup checks and project authorization; no other deletion is implied.
 
 The workflow pack does not grant permission to install packages, modify shared
 software, change source code, change resource policy, delete material, cancel

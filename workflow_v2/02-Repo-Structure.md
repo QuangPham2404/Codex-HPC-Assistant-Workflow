@@ -9,6 +9,8 @@ only the changes required for Workflow v2 to govern new work.
 
 ```text
 <project-root>/
+├── .gitignore
+├── .codex-worktrees/     # ignored runtime-only isolated Git worktrees
 ├── AGENTS.md
 ├── APPLICATION.md
 ├── README.md
@@ -61,6 +63,10 @@ workflow directories.
 
 ## Directory roles
 
+- `.codex-worktrees/`: ignored runtime execution infrastructure, not normal
+  repository content. `SETUP` creates/adapts root `.gitignore` with
+  `.codex-worktrees/`, preserving existing rules. Configure the remote root;
+  evidence inside worktrees must be retrieved/persisted before cleanup.
 - `workflow/`: reusable workflow rules and templates. Read every numbered file
   before workflow action.
 - `tasks/`: persistent handoff between the Strategic Analyst and Codex. Each
@@ -128,6 +134,11 @@ Strategic Analyst writes the approved task to the repository. Otherwise the
 Human Leader writes it or authorizes a repository agent to copy the exact
 approved content mechanically. Only the committed, synchronized task file is
 executable by Codex; conversation drafts are proposals.
+
+Generated `tasks/README.md` and task guidance must accept `APPROVED / codex`
+for fresh execution and `EXECUTING / codex` for resume. Section 1.11 is the
+durable Human approval record; session endings do not revoke it. Track 1
+recovery stays `EXECUTING`; `BLOCKED` means another actor must act.
 
 Raw benchmark, probe, profiling, PBS, and result evidence stays in its
 existing canonical location. Task files reference that evidence rather than

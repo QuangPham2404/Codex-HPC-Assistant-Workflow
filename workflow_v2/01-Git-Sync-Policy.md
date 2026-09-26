@@ -1,94 +1,124 @@
-# Git and Two-Clone Synchronization Policy
+# Git Synchronization and Execution Isolation Policy
 
-This policy keeps the local PC clone and cluster clone synchronized. It
-applies to workflow files, build/run scripts, planning, progress, metadata,
-logs, and extracted results.
+This policy governs reviewed repository state, execution, and evidence transport
+between the local clone and cluster. Project `AGENTS.md` defines exact commands,
+remote/ref, paths, and restrictions; do not assume a particular remote or branch.
 
-## Clone roles
+## Clone roles and authoritative revision
 
-- The local PC clone is the preferred place for preparing and reviewing files,
-  committing, and pushing.
-- The cluster contains a real Git clone at the approved remote project root.
-- The cluster clone is used for remote builds and scheduler execution.
-- Do not store GitHub credentials on the cluster.
-- Do not use an untracked copy as the project clone.
+The local clone is preferred for preparation, review, commit, and push. The
+cluster primary clone is a real Git clone and may contain user work, generated
+evidence, or runtime artifacts. Clean execution worktrees provide isolation
+without disturbing that primary working tree. Never store Git credentials on
+the cluster or substitute an untracked copy for reviewed Git state.
 
-## Startup and synchronization
+Identify the exact approved repository commit from the explicit task handoff
+and project policy, not merely the latest remote tip. Record the full commit,
+task revision, and scripts used. Reviewed in-scope changes must be validated,
+committed, and pushed when project policy requires before remote use; record
+any resulting execution revision and verify unchanged strategic scope.
 
-Before starting work in either environment:
+## Startup and task authority
 
-1. run `git status`;
-2. run `git pull --ff-only` when synchronization is required;
-3. inspect unexpected changes;
-4. stop if fast-forward synchronization fails or the clones diverge.
+Inspect `git status` and the revision before synchronization in either environment.
+Verify the explicitly identified task has `current_owner: codex` and either
+`status: APPROVED` for initial execution or `status: EXECUTING` for resume.
+Section `1.11 Authorization` must still record `status: APPROVED`,
+`approved_by: user`, and the unchanged approved scope. Conversation drafts are
+not executable state. Human approval precedes task materialization by the
+Strategic Analyst or authorized mechanical fallback and commit/push under
+project policy. Never execute a stale or conflicting Strategic Specification.
 
-Before Codex executes an approved task or remote execution after local script
-changes:
+## Select a safe execution tree
 
-1. prepare files locally;
-2. inspect the relevant diff;
-3. run appropriate validation;
-4. commit reviewed changes when authorized;
-5. push from the local PC when authorized;
-6. pull with `git pull --ff-only` in the cluster clone;
-7. verify the intended commit, task revision, and scripts are present
-   remotely;
-8. verify the explicitly identified task has `status: APPROVED` and
-   `current_owner: codex` in front matter, and its Authorization section
-   records `status: APPROVED`, `approved_by: user`, and an approved scope
-   matching the user's instruction;
-9. confirm that neither tree has unexpected changes, except documented
-   generated output or explicitly preserved runtime artifacts.
+After the required direct SSH connectivity check:
 
-Codex must not act on a stale Strategic Specification. If the intended task
-revision is absent, the task is not approved, or the local and remote clones
-disagree about the task, stop and synchronize or report the conflict.
+1. Record the cluster primary clone path, HEAD, branch/ref, tracked changes,
+   untracked and relevant ignored artifacts, and existing worktrees. Inspect
+   enough state to determine whether synchronization could affect user material.
+2. If the primary clone is sufficiently clean and safely fast-forwardable,
+   fetch/synchronize using the reviewed project policy. Use only fast-forward
+   synchronization, such as `git pull --ff-only <git-remote> <git-ref>`.
+   Verify HEAD is the exact intended execution commit before use. A clean tree
+   at a different commit is insufficient; use isolation if appropriate.
+3. If the primary clone has pre-existing modified tracked files, untracked
+   runtime artifacts, generated evidence, unrelated work, or cannot safely
+   fast-forward to the intended commit, preserve its working tree unchanged.
+   Record the state, then update remote refs non-destructively with the configured
+   `git fetch <git-remote>` mechanism when authorized. Fetch and worktree
+   registration may update Git metadata but must not alter primary files.
+   A configured nested runtime root may gain new uniquely named worktree
+   directories; preserve all pre-existing primary content and its index.
+4. Resolve and verify the exact approved commit, then create a clean detached
+   execution worktree inside the configured, approved root. Generic example,
+   run from the primary clone with the adapted path:
 
-For the Strategy → Execution handoff, the Human Leader approves the task and
-authorizes its repository materialization. With authorized direct GitHub
-access, the Strategic Analyst writes the approved task. Otherwise the Human
-Leader writes it or authorizes a repository agent to copy the exact approved
-content mechanically. The approved task must then be committed and pushed
-under project Git policy before Codex pulls and executes it.
+   ```bash
+   git worktree add --detach \
+     .codex-worktrees/TASK-XXX-<shortsha> \
+     <exact-approved-commit>
+   ```
 
-Never run stale local-only build, run, extraction, or planning scripts on the
-cluster. They must reach the cluster through the reviewed Git synchronization.
+   Use a unique suffix if that path already exists; never overwrite it.
+5. Verify the execution tree HEAD, task approval/scope, scripts, application
+   revision, required files, and suitable Git state before execution. Record
+   its path and revision in the Execution Report and progress handoff. Use
+   paths from this tree for submissions and retrieval; do not silently fall
+   back to primary scripts or artifacts. Required external inputs must be
+   obtained through approved paths without overwriting user material.
 
-## Before committing
+A dirty primary clone alone is not a blocker. Never use `git reset --hard`,
+`git clean`, automatic stash/pop, automatic merge, destructive checkout,
+file deletion, or overwrite of user material to make it executable. Do not
+create automatic merge commits. Inspect failed fast-forwards; isolate when
+possible rather than forcing reconciliation of unrelated primary history.
 
-- Run `git status`.
-- Inspect the relevant diff and file list.
-- Validate scripts and documentation as appropriate.
-- Commit only reviewed and useful scripts, plans, progress notes, metadata,
-  logs, and extracted results.
-- Do not commit unrelated changes or raw temporary files.
-- Preserve useful failure evidence when the workflow requires it.
+## Worktree reuse, evidence, and cleanup
 
-## Divergence and unexpected changes
+Reuse only a workflow execution worktree associated with the intended task,
+pointing at the exact intended revision, with suitable Git state and no
+unresolved or unique evidence. Otherwise create a uniquely named worktree.
+Do not reset an old worktree containing evidence to reuse its directory.
+Safe recreation uses a new directory unless the old tree is verified disposable.
 
-If `git pull --ff-only` fails because the clones diverged, stop and inspect the
-difference. Do not create a merge commit automatically. Do not overwrite or
-delete user changes. Report the conflicting state and wait for direction when
-resolution requires judgment.
+Outputs remain authoritative evidence even in ignored runtime infrastructure.
+Record exact worktree paths, retrieve/persist outputs in canonical project
+locations with provenance, and preserve task reports and progress changes
+through the reviewed Git policy. On resume, consult durable progress, existing
+jobs, and evidence before rerunning anything; never duplicate submissions merely
+because a session restarted.
 
-Pre-existing untracked runtime artifacts must be preserved and reported. Do not
-delete them merely to make the repository appear clean.
+Automatic `git worktree remove` is allowed only under configured project policy
+for a workflow-created worktree verified to have no uncommitted tracked changes,
+no unique untracked evidence, and no outputs (including ignored files) still
+needing retrieval or persistence. Otherwise preserve it. Do not force removal.
+Cleanup must never affect the primary clone or user-created worktrees.
 
-## Remote synchronization rule
+## Routine authority and real blockers
 
-When Codex creates or updates build scripts, PBS scripts, run scripts,
-extraction scripts, or planning files locally for remote execution, the
-reviewed local changes must be committed and pushed before those scripts are
-used remotely, when the project permissions require that sequence. The remote
-clone must then run `git pull --ff-only` before submission.
+Once configured commands are authorized during `SETUP`, ordinary non-destructive
+inspection, fetch, revision verification, safe worktree creation/reuse, verified
+disposable worktree removal, and clean-primary fast-forward synchronization
+are normal task authority; no fresh approval is needed each session. They
+remain bounded by root `AGENTS.md` and the approved task. Recovery stays
+`EXECUTING / codex` when Codex can safely complete it under existing authority.
 
-Aspire2A-to-local result retrieval may use the project's documented output
-retrieval workflow, but retrieved files must land in the matching local
-project directories and retain their provenance.
+Stop the affected work when the intended revision cannot be fetched or identified,
+histories genuinely conflict in required authoritative state, approved task
+content differs between authoritative states, safe worktree creation fails,
+Git authentication requires Human interaction, required files cannot be obtained,
+or recovery would overwrite/delete user work. Inspect and perform deterministic
+safe recovery first when available; use `BLOCKED` only when another actor
+actually must act. Never infer approval for destructive conflict resolution.
 
-After Codex completes the Execution Report in the active task:
+## Review and evidence handoff
 
-1. validate the task file and referenced evidence;
-2. commit and push when required and authorized by normal project policy;
-3. ensure the Strategic Analyst can read the latest repository revision before
-   analysis is authorized.
+Before committing, inspect status, diff, and file list; validate appropriately.
+Commit only reviewed, useful scripts, documentation, metadata, logs, and results.
+Exclude unrelated changes and temporary files, and preserve required failure
+evidence. Transfer results with the configured non-interactive file-transfer
+command into matching canonical local directories, retaining provenance.
+
+After completing the Execution Report, validate it and its evidence references,
+commit/push when required and authorized, and ensure the Strategic Analyst can
+read the latest repository revision before authorized analysis.

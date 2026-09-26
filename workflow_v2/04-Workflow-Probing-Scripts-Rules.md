@@ -33,6 +33,6 @@ output directory, or changes configuration requires user permission before use.
 
 Probe-only scripts may be committed, pushed, and submitted without separate
 permission when they satisfy the read-only scope above and pass syntax and
-output-path checks. They still follow the normal synchronize, pull, submit,
-validate, and output-retrieval workflow. Preserve raw output as evidence and
+output-path checks. They still follow normal synchronization and execution-tree
+selection, submission, validation, and output retrieval. Preserve raw output as evidence and
 record the attempt in the applicable progress or script documentation.

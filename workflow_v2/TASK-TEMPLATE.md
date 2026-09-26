@@ -9,6 +9,10 @@ created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
 ---
 
+<!-- APPROVED/codex: ready for initial execution. EXECUTING/codex: started
+     and resumable across sessions. Section 1.11 is durable Human approval.
+     Track 1 recovery stays EXECUTING; BLOCKED is a genuine actor handoff. -->
+
 # TASK-XXX — <Task Title>
 
 ## 1. STRATEGIC SPECIFICATION
@@ -62,7 +66,8 @@ last_updated: YYYY-MM-DD
 ### 1.11 Authorization
 
 <!-- Draft: DRAFT/null. After human approval, record APPROVED, exact scope,
-     and user; update front-matter status/current_owner separately. -->
+     and user; retain unchanged approval/scope across execution and resume.
+     Update front-matter status/current_owner separately as lifecycle progress. -->
 
 status: <DRAFT | APPROVED>
 

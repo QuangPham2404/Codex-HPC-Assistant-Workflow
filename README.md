@@ -47,6 +47,14 @@ unavailable, the Human Leader or an authorized mechanical repository agent
 materializes the exact approved content. Codex executes only synchronized,
 approved repository state.
 
+Workflow v2 uses direct non-interactive SSH as baseline connectivity, with
+optional persistent SSH for performance. It preserves dirty primary clones
+through clean isolated execution worktrees and resumes `EXECUTING / codex`
+tasks across sessions under unchanged Section 1.11 Human approval. `SETUP`
+configures these behaviors, routine synchronization permissions, and the
+project's `.codex-worktrees/` ignore rule. Safe deterministic recovery stays
+with Codex; meaningful authorization and strategic decisions remain human-led.
+
 ## Adoption
 
 For a fresh project, download the recommended v2 package as a directory:

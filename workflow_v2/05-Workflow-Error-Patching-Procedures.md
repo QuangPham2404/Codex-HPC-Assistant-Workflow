@@ -13,10 +13,25 @@ incorrect PBS output names, stale expected-binary paths, shell quoting or
 control-flow defects, unnecessarily strict preflight checks, inconsistent
 metadata, and extraction parsing or duplicate-handling defects.
 
+Track 1 also includes deterministic infrastructure recovery under configured
+project permissions: direct SSH fallback when optional persistence is unavailable;
+stale refs recovered by configured fetch; dirty primary clones preserved through
+clean execution worktrees; safe recreation of workflow-created clean worktrees;
+non-destructive synchronization mechanics; and workspace/output-directory
+preparation. Follow `01-Git-Sync-Policy.md` for evidence and disposal checks.
+Dirty primary repository state is not automatically Track 2 when safe isolation
+is possible. These recoveries remain `EXECUTING / codex`, including across
+sessions, and need no renewed approval within unchanged authorized scope.
+
 Track 1 is limited to reversible changes to workflow scripts, documentation,
-metadata, and output handling. It must not patch source code, choose compiler
-or MPI strategies, change optimization flags or resources, modify shared
+metadata, output handling, and configured non-destructive infrastructure
+recovery. It must not patch source code, choose compiler or MPI strategies, change optimization flags or resources, modify shared
 software, or interpret uncertain application behavior.
+
+For infrastructure recovery without a build/run attempt, record the condition,
+state, recovery, execution path/revision, and validation in task/progress records;
+do not invent scheduler attempts. The retry procedure below applies to actual
+build/run failures.
 
 For a Track 1 failure:
 
@@ -43,7 +58,9 @@ authorization, or a change beyond routine workflow repair. Examples include
 compiler/source compatibility errors, unavailable dependencies or modules,
 MPI initialization failures or hangs, scheduler/resource/hardware/filesystem
 problems, possible compiler or MPI correctness issues, source or input changes,
-resource or launcher changes, and uncertain causes.
+resource or launcher/transport changes, and uncertain causes. Infrastructure
+conditions are Track 2 only when safe deterministic recovery is unavailable or
+requires judgment, new authorization, destructive resolution, or external action.
 
 For Track 2:
 
@@ -67,6 +84,13 @@ blocked state and the relevant evidence in that task's `CODEX EXECUTION REPORT`.
 Strategic interpretation of the failure remains outside Codex's role. Codex
 must not widen the task scope to resolve a Track 2 issue unless the broader
 action is separately authorized.
+
+Use `BLOCKED` with the actual next actor (often `user`) only when that actor
+must act: new authorization, interactive authentication, administrator action,
+strategic decision, unavailable dependency requiring a decision, or user changes
+that overlap required task state and cannot be isolated. A known safe operational
+fix, optional SSH failure with working direct SSH, or dirty clone with isolation
+is not a handoff. Preserve scientific-correctness and scope boundaries.
 
 Maintain the case log as append-only. Use statuses such as `OPEN`,
 `USER_ACTION_REQUIRED`, `AUTHORIZED_FOR_PATCH`, `RESOLVED`, or `CLOSED`.
